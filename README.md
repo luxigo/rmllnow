@@ -9,7 +9,7 @@ Display only the current conferences. Click the "+" button to display all the co
 
 Click on a conference description to display the event details, click on the arrow button to display the next conference details.
 
-Don't hesitate to ask additional features or submit push requests.
+Don't hesitate to ask additional features, submit pull requests or report issues :-)
 
 
 
