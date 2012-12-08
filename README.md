@@ -12,5 +12,5 @@ Click on a conference description to display the event details, click on the arr
 Don't hesitate to ask additional features, submit pull requests or report issues :-)
 
 
-
-
+You must edit rmllnow.sh and call it from a crontab to fetch the program in xml from spip.
+(nodejs is required)
