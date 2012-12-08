@@ -90,8 +90,8 @@ function updateList(){
     today=$('li[data-date='+date+']')
     .each(function(i,li){
     	li=$(li);
-	today_start[i]=parseInt(li.attr('data-start'),10);
-	today_stop[i]=parseInt(li.attr('data-end'),10);
+      today_start[i]=parseInt(li.attr('data-start'),10);
+      today_stop[i]=parseInt(li.attr('data-end'),10);
     });
     prevdate=date;
   }
@@ -111,8 +111,8 @@ function updateList(){
         if (!li.hasClass('ui-screen-hidden')) {
           li.removeClass('hidden');
           ++count;
-	}
-       } else {
+        }
+      } else {
           li.addClass('hidden');
       }
     } 
