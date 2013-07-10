@@ -22,9 +22,6 @@ parser.addListener('end',function(xml, error) {
 
 fs.readFile( 'prog.xml', function(err, data) {
     if (!parser.parseString(data)) {
-    //  console.log('xml2js: successfully parsed file.');
-  //  }
-  //  else {
       console.error('xml2js: parse error: "%s"', parser.getError());
     }
 });
@@ -35,21 +32,52 @@ var now;
 var hours;
 var minutes;
 var thisday;
+var thisday_human;
+
+var nameOfDay=[
+  'Dimanche',
+  'Lundi',
+  'Mardi',
+  'Mercredi',
+  'Jeudi',
+  'Vendredi',
+  'Samedi'
+];
 
 function twoDigits(a) {
   return (parseInt(a,10)>9)?a:'0'+a;
 }
 
+var QUERY_STRING=process.argv[2]||'';
+if (QUERY_STRING.substr(0,1)!='?') {
+  QUERY_STRING='?'+QUERY_STRING;
+}
+console.log('<!-- '+QUERY_STRING+ ' -->');
+var FULL=param('full');
+
+function param(name) {
+  var re=new RegExp('.*[\?&]'+name+'=([^&]+).*');
+  var matches=QUERY_STRING.match(re);
+  return matches?decodeURIComponent(matches[1]):null;
+}
+
 function upDate() {
-	_date=new Date;
+  var d=param('d');
+  _date=(d)?new Date(d):new Date;
 	date=_date.getFullYear()+'-'+twoDigits(_date.getMonth()+1)+'-'+twoDigits(_date.getDate());
 	hours=_date.getHours();
 	minutes=_date.getMinutes();
-
-	now=_date.getDate()*1440*hours*60+minutes;
-////// uncomment for testing (same date must be set in _rmllnow.js):
-//date="2012-07-09";
-//now=10*1440+11*60;
+  var t=param('t');
+  if (t) {
+    t=t.split(':');
+    hours=parseInt(t[0],10);
+    minutes=parseInt(t[1],10);
+  } else if (d && !d.match(/:/)) {
+    var __date=new Date();
+    hours=_date.getHours();
+    minutes=_date.getMinutes();
+  }
+	now=_date.getDate()*1440+hours*60+minutes;
 }
 
 function conferences_getCurrent(prog) {
@@ -59,11 +87,12 @@ function conferences_getCurrent(prog) {
 
 	function event_process(event) {
     event.date=thisday;
+    event.date_human=thisday_human;
     var day=parseInt(thisday.split('-')[2],10);
-		var start=event.start.split(':');
+		var start=event.start[0].split(':');
 		event.start_time=parseInt(start[0],10)*60+parseInt(start[1],10);
 		
-		var duration=event.duration.split(':');
+		var duration=event.duration[0].split(':');
 		var duration_time=parseInt(duration[0],10)*60+parseInt(duration[1],10);
     event.end_time=event.start_time+duration_time;
 
@@ -84,7 +113,7 @@ function conferences_getCurrent(prog) {
 	}
 
 	function room_process(room) {
-		var room_name=room['@'].name;
+		var room_name=room['$'].name;
 		if (Array.isArray(room.event)) {
 			room.event.forEach(function(event) {
 				event_process(event);
@@ -94,9 +123,12 @@ function conferences_getCurrent(prog) {
 		}
 	}
 
-	prog.day.forEach(function(day) {
-      thisday=day['@'].date;
-		if(day['@'].date==date) {
+	prog.schedule.day.forEach(function(day) {
+      thisday=day['$'].date;
+      var _date=new Date(thisday); 
+      thisday_human=t(nameOfDay[_date.getDay()])+' '+_date.getDate();
+
+		if(FULL || day['$'].date==date) {
 			if (Array.isArray(day.room)) {
 				day.room.forEach(function(room) {
 					room_process(room);
@@ -144,25 +176,28 @@ function HEAD() {
   html+='<script src="jquery.js"></script>';
   html+='<script src="_rmllnow.js"></script>';
   html+='<script src="jquery.mobile.js"></script>';
+  html+='<script>';
+  html+='var FULL='+FULL;
+  html+='</script>';
   html+='</head>';
   return html;
 }
 
-function header(name,title) {
+function header(name,title,titleClass) {
   var html='<!-- start of page: #'+name+' -->';
   html+='<div data-role="page" id="'+name+'">';
   html+='<div data-role="header" data-position="fixed">';
   if (name=='index') {
-    html+='<a href onclick="setTimeout(moreless,0)" id="moreless" data-position="left" data-role="button" data-icon="plus" data-iconpos="notext"></a>';
+    html+='<a href onclick="setTimeout(moreless,0)" id="moreless" data-position="left" data-role="button" data-icon="plus" data-iconpos="notext" title="Afficher/Cacher les autres événements"></a>';
   } else {
-    html+='<a href onclick="document.location.assign(\'#\')" id="home" data-position="left" data-role="button" data-icon="home" data-iconpos="notext"></a>';
-    html+='<a href id="next" onclick="next()" class="arrow_right" data-role="button" data-position="right" data-icon="arrow-r" data-iconpos="notext"></a>';
+    html+='<a href onclick="document.location.assign(\'#\')" id="home" data-position="left" data-role="button" data-icon="home" data-iconpos="notext" title="Revenir à la liste"></a>';
+    html+='<a href id="next" onclick="next()" class="arrow_right" data-role="button" data-position="right" data-icon="arrow-r" data-iconpos="notext" title="Prochain événement"></a>';
   }
 //html+='<span class="navbar" data-role="controlgroup" data-type="horizontal">';
 //html+='<a href class="arrow_left" data-role="button" data-icon="arrow-l" data-iconpos="notext"></a>';
 //html+='<a href class="arrow_up" data-role="button" data-icon="arrow-u" data-iconpos="notext"></a>';
 //html+='</span>';
-  html+='<h1>'+title+'</h1>';
+  html+='<h1'+((titleClass)?' class="'+titleClass+'"':'')+'>'+title+'</h1>';
   html+='</div><!-- /header -->';
   html+='<div data-role="content">';
   return html;
@@ -170,7 +205,7 @@ function header(name,title) {
  
 function index(list) {
   
-  var html=header('index',date);
+  var html=header('index',date,'today');
 
   html+="<div id=\"nothing\" data-role=\"popup\"><center>Aucun événement à afficher<center></div>";
 
@@ -181,16 +216,16 @@ function index(list) {
 }
 
 function confListView(list) {
-  var html='<ul data-role="listview" data-filter="true">';
+  var html='<ul data-role="listview" data-filter="true" title="Afficher les détails de l\'événement">';
 	list.forEach(function(event){
-    html+='<li data-date="'+event.date+'" data-start="'+event.start_time+'" data-end="'+event.end_time+'"><a href="#_'+event['@'].id+'">';
+    html+='<li data-date="'+event.date+'" data-start="'+event.start_time+'" data-end="'+event.end_time+'"><a href="#_'+event['$'].id+'">';
 
     html+=event.title;
     html+='<span class="details">'+(event_type[lang][event.type]?' &nbsp;('+event_type[lang][event.type]+' &mdash; '+event.track+')':'('+event.track+')')+'</span>';
     var who=intervenants(event,true);
     html+=who.length?'<div class="who">'+who+'</div>':'';
     html+='<div class="sec">';
-    html+=event.start+' - '+event.end+' &nbsp;';
+    html+=(FULL?'<span class="full">'+event.date_human+' &mdash; </span>':'')+event.start+' - '+event.end+' &nbsp;';
     html+=event.room;
     html+='</div>';
     html+='</a></li>';
@@ -228,11 +263,11 @@ function t(txt) {
 function pages(list) {
   var html='';
 	list.forEach(function(event){
-    html+=header('_'+event['@'].id,event.start+' - '+event.end);
+    html+=header('_'+event['$'].id,(FULL?'<span class="full">'+event.date_human+' &mdash; </span>':'')+event.start+' - '+event.end);
     html+='<h3 class="track">'+event.track+'</h3>';
     html+='<h2>'+event.title+(event_type[lang][event.type]?' <span class="etype">('+event_type[lang][event.type]+')</span>':'')+'</h2>';
     html+=intervenants(event);
-    html+=event.description.replace(/h3/g,'strong');
+    html+=event.description[0].replace(/h3/g,'strong');
     //var ho='<strong>Horaire:</strong> '+event.start+' - '+event.end+' <strong>&mdash; Salle:</strong> '+event.room;
    // var ho='<strong>Horaire:</strong> '+event.start+' - '+event.end;
    // html+=ho;
@@ -244,13 +279,13 @@ function pages(list) {
 
 function intervenants(event,notitle) {
    var html='';
-   if (event.persons && event.persons.person) {
-     if (!Array.isArray(event.persons.person)) {
-       event.persons.person=[event.persons.person];
+   if (event.persons && event.persons[0].person) {
+     if (!Array.isArray(event.persons[0].person)) {
+       event.persons[0].person=[event.persons[0].person];
      }
-     if (!notitle) html+='<p><span class="intervenants">Intervenant'+(event.persons.person.length>1?'s' :'')+' :</span> ';
-     event.persons.person.forEach(function(person,idx){
-       html+=(idx?', ':'')+person['#'];
+     if (!notitle) html+='<p><span class="intervenants">Intervenant'+(event.persons[0].person.length>1?'s' :'')+' :</span> ';
+     event.persons[0].person.forEach(function(person,idx){
+       html+=(idx?', ':'')+person['_'];
      });
      html+='</p>';
    }

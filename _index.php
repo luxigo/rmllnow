@@ -1,5 +1,5 @@
 <?php
 
-passthru("/usr/local/bin/node rmllnow.js");
+passthru("node rmllnow.js ?'".$_SERVER['QUERY_STRING']."'");
 
 ?>

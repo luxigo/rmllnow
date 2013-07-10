@@ -13,6 +13,14 @@ div.sec {
   font-weight: normal;
 }
 
+.next {
+  opacity: 0.6;
+}
+
+.sec.next {
+  opacity: 0.4;
+}
+
 .notnow {
 	opacity: 0.6;
 }
