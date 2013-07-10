@@ -96,7 +96,7 @@ function showFirst() {
   //setTimeout(function(){
     var li=$('li[data-date]:not(.notnow):first');
       if (li.length) {
-        $(document.body).scrollTop(li.offset().top-44);
+        $(document).scrollTop(li.offset().top-44);
       }
   //},1);
 }
