@@ -1,5 +1,5 @@
 <?php
 
-passthru("node rmllnow.js ?'".$_SERVER['QUERY_STRING']."'");
+passthru("node rmllnow.js ?'".escapeshellarg($_SERVER['QUERY_STRING'])."'");
 
 ?>
