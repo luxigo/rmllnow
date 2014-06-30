@@ -54,6 +54,7 @@ if (QUERY_STRING.substr(0,1)!='?') {
 }
 console.log('<!-- '+QUERY_STRING+ ' -->');
 var FULL=param('full');
+var lang=param('lang')||'fr';
 
 function param(name) {
   var re=new RegExp('.*[\?&]'+name+'=([^&]+).*');
@@ -221,7 +222,7 @@ function confListView(list) {
     html+='<li data-date="'+event.date+'" data-start="'+event.start_time+'" data-end="'+event.end_time+'"><a href="#_'+event['$'].id+'">';
 
     html+=event.title;
-    html+='<span class="details">'+(event_type[lang][event.type]?' &nbsp;('+event_type[lang][event.type]+' &mdash; '+event.track+')':'('+event.track+')')+'</span>';
+    html+='<span class="details">'+(t(event_type[event.type])?' &nbsp;('+t(event_type[event.type])+' &mdash; '+event.track+')':'('+event.track+')')+'</span>';
     var who=intervenants(event,true);
     html+=who.length?'<div class="who">'+who+'</div>':'';
     html+='<div class="sec">';
@@ -244,20 +245,17 @@ var event_type={
     tabler: 'Table ronde'
   },
   en: {
-    plen: 'Plénière',
-    conf: 'Conférence',
-    atl: 'Atelier',
+    plen: 'Plenary',
+    conf: 'Conference',
+    atl: 'Workshop',
     ligtal: 'Lightning talk',
-    ag: 'Assemblée générale',
-    tabler: 'Table ronde'
+    ag: 'General meeting',
+    tabler: 'Round table'
   }
 };
 
-var lang='fr';
-
 function t(txt) {
-  if (lang=="fr") return txt;
-  return en[txt]?en[txt]:txt;
+  return (intl[lang] && intl[lang][txt])?intl[lang][txt]:txt;
 }
 
 function pages(list) {
@@ -265,7 +263,7 @@ function pages(list) {
 	list.forEach(function(event){
     html+=header('_'+event['$'].id,(FULL?'<span class="full">'+event.date_human+' &mdash; </span>':'')+event.start+' - '+event.end);
     html+='<h3 class="track">'+event.track+'</h3>';
-    html+='<h2>'+event.title+(event_type[lang][event.type]?' <span class="etype">('+event_type[lang][event.type]+')</span>':'')+'</h2>';
+    html+='<h2>'+event.title+(t(event_type[event.type])?' <span class="etype">('+t(event_type[event.type])+')</span>':'')+'</h2>';
     html+=intervenants(event);
     html+=event.description[0].replace(/h3/g,'strong');
     //var ho='<strong>Horaire:</strong> '+event.start+' - '+event.end+' <strong>&mdash; Salle:</strong> '+event.room;
