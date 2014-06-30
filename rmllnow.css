@@ -39,6 +39,7 @@ div.sec {
 }
 
 span.details, .etype {
+    margin-left: 8px;
 	font-style: italic;
 	font-size: smaller;
 }

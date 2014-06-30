@@ -5,6 +5,7 @@ var sys = require('util'),
 var result=[];
 
 var en={};
+var intl={};
 
 
 var parser = new xml2js.Parser();
